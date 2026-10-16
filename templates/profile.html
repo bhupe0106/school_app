@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="dashboard">
+    <header class="topbar">
+      <h2>Student Dashboard</h2>
+      <div><span id="clock"></span> <a class="btn small" href="{{ url_for('logout') }}">Logout</a></div>
+    </header>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Welcome, {{ student['name'] }}</h3>
+        <button id="toggleBtn" class="btn small">Show/Hide Details</button>
+        <div id="details">
+          <p><strong>Name:</strong> {{ student['name'] }}</p>
+          <p><strong>Email:</strong> {{ student['email'] }}</p>
+          <p><strong>Age:</strong> {{ student['age'] }}</p>
+          <p><strong>Course:</strong> <span id="courseText">{{ student['course'] }}</span></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Update Course</h3>
+        <select id="courseSelect">
+          {% for c in courses %}
+          <option value="{{ c }}" {{ 'selected' if c == student['course'] }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    function updateClock() {
+      $("#clock").text(new Date().toLocaleTimeString());
+    }
+    setInterval(updateClock, 1000);
+
+    function showToast(text, isError) {
+      $("#toast").text(text).toggleClass("error", !!isError).fadeIn(200).delay(2500).fadeOut(400);
+    }
+
+    $(document).ready(function () {
+      updateClock();
+
+      $("#toggleBtn").click(function () {
+        $("#details").toggle();
+      });
+
+      $("#courseSelect").change(function () {
+        var course = $(this).val();
+        $.post("/update-course", { course: course }, function (res) {
+          $("#courseText").text(course);
+          showToast(res.message);
+        }).fail(function (xhr) {
+          var m = xhr.responseJSON ? xhr.responseJSON.message : "Update failed";
+          showToast(m, true);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
